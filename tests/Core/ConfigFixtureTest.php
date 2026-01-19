@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace TddWizard\Fixtures\Core;
@@ -16,17 +17,12 @@ use PHPUnit\Framework\TestCase;
  */
 class ConfigFixtureTest extends TestCase
 {
-    const         STORE_NAME_PATH              = 'general/store_information/name';
+    private const STORE_NAME_PATH = 'general/store_information/name';
     private const SECOND_STORE_ID_FROM_FIXTURE = 'fixture_second_store';
-    private const FIRST_STORE_ID               = 'default';
-    /**
-     * @var MutableScopeConfigInterface
-     */
-    private $scopeConfig;
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
+    private const FIRST_STORE_ID = 'default';
+
+    private MutableScopeConfigInterface $scopeConfig;
+    private StoreManagerInterface $storeManager;
 
     protected function setUp(): void
     {
@@ -35,7 +31,7 @@ class ConfigFixtureTest extends TestCase
         $this->storeManager = $objectManager->get(StoreManagerInterface::class);
     }
 
-    public function testSetGlobalChangesDefaultScope()
+    public function testSetGlobalChangesDefaultScope(): void
     {
         ConfigFixture::setGlobal(self::STORE_NAME_PATH, 'Ye Olde Wizard Shop');
         $this->assertConfigValue(
@@ -48,7 +44,7 @@ class ConfigFixtureTest extends TestCase
     /**
      * @magentoAppArea frontend
      */
-    public function testSetGlobalOverridesAllScopes()
+    public function testSetGlobalOverridesAllScopes(): void
     {
         $this->givenStoreValue(self::STORE_NAME_PATH, 'Store Override');
         $this->givenWebsiteValue(self::STORE_NAME_PATH, 'Website Override');
@@ -60,7 +56,7 @@ class ConfigFixtureTest extends TestCase
      * @magentoAppArea frontend
      * @magentoDataFixture Magento/Store/_files/second_store.php
      */
-    public function testSetForStoreWithCurrentStore()
+    public function testSetForStoreWithCurrentStore(): void
     {
         $this->storeManager->setCurrentStore(self::SECOND_STORE_ID_FROM_FIXTURE);
         ConfigFixture::setForStore(self::STORE_NAME_PATH, 'Store store');
@@ -76,7 +72,7 @@ class ConfigFixtureTest extends TestCase
      * @magentoAppArea frontend
      * @magentoDataFixture Magento/Store/_files/second_store.php
      */
-    public function testSetForStoreWithExplicitStore()
+    public function testSetForStoreWithExplicitStore(): void
     {
         ConfigFixture::setForStore(self::STORE_NAME_PATH, 'Store 1', self::FIRST_STORE_ID);
         ConfigFixture::setForStore(self::STORE_NAME_PATH, 'Store 2', self::SECOND_STORE_ID_FROM_FIXTURE);

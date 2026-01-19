@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace TddWizard\Fixtures\Customer;
@@ -13,14 +14,9 @@ use Magento\TestFramework\Helper\Bootstrap;
  */
 class CustomerFixture
 {
-    /**
-     * @var CustomerInterface
-     */
-    private $customer;
-
-    public function __construct(CustomerInterface $customer)
-    {
-        $this->customer = $customer;
+    public function __construct(
+        private readonly CustomerInterface $customer,
+    ) {
     }
 
     public function getCustomer(): CustomerInterface
@@ -30,12 +26,12 @@ class CustomerFixture
 
     public function getDefaultShippingAddressId(): int
     {
-        return (int) $this->customer->getDefaultShipping();
+        return (int)$this->customer->getDefaultShipping();
     }
 
     public function getDefaultBillingAddressId(): int
     {
-        return (int) $this->customer->getDefaultBilling();
+        return (int)$this->customer->getDefaultBilling();
     }
 
     public function getOtherAddressId(): int
@@ -49,10 +45,10 @@ class CustomerFixture
     public function getNonDefaultAddressIds(): array
     {
         return array_values(
-            array_diff(
+            array: array_diff(
                 $this->getAllAddressIds(),
-                [$this->getDefaultBillingAddressId(), $this->getDefaultShippingAddressId()]
-            )
+                [$this->getDefaultBillingAddressId(), $this->getDefaultShippingAddressId()],
+            ),
         );
     }
 
@@ -62,16 +58,14 @@ class CustomerFixture
     public function getAllAddressIds(): array
     {
         return array_map(
-            function (AddressInterface $address): int {
-                return (int)$address->getId();
-            },
-            (array)$this->customer->getAddresses()
+            callback: static fn (AddressInterface $address): int => (int)$address->getId(),
+            array: (array)$this->customer->getAddresses(),
         );
     }
 
     public function getId(): int
     {
-        return (int) $this->customer->getId();
+        return (int)$this->customer->getId();
     }
 
     public function getConfirmation(): string
@@ -88,24 +82,27 @@ class CustomerFixture
     {
         if ($session === null) {
             $objectManager = Bootstrap::getObjectManager();
-            $objectManager->removeSharedInstance(Session::class);
-            $session = $objectManager->get(Session::class);
+            $objectManager->removeSharedInstance(className: Session::class);
+            $session = $objectManager->get(type: Session::class);
         }
-        $session->setCustomerId($this->getId());
+        $session->setCustomerId(id: $this->getId());
     }
 
     public function logout(Session $session = null): void
     {
         if ($session === null) {
             $objectManager = Bootstrap::getObjectManager();
-            $session = $objectManager->get(Session::class);
+            $session = $objectManager->get(type: Session::class);
         }
 
         $session->logout();
     }
 
+    /**
+     * @throws \Exception
+     */
     public function rollback(): void
     {
-        CustomerFixtureRollback::create()->execute($this);
+        CustomerFixtureRollback::create()->execute(customerFixtures: $this);
     }
 }

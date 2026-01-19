@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace TddWizard\Fixtures\Theme;
@@ -10,11 +11,11 @@ use PHPUnit\Framework\TestCase;
 /**
  * @magentoAppIsolation enabled
  * @magentoAppArea frontend
- * @magentoComponentsDir ../../../../vendor/tddwizard/magento2-fixtures/tests/Theme/_files/design
+ * @magentoComponentsDir ../../../../vendor/hardman-commerce/magento2-fixtures/tests/Theme/_files/design
  */
 class ThemeFixtureTest extends TestCase
 {
-    public function testSetCurrentFrontendTheme()
+    public function testSetCurrentFrontendTheme(): void
     {
         ThemeFixture::setCurrentTheme('Magento/blank');
         /** @var DesignInterface $design */
@@ -22,7 +23,7 @@ class ThemeFixtureTest extends TestCase
         $this->assertEquals('Magento/blank', $design->getDesignTheme()->getCode());
     }
 
-    public function testCanUseTestThemeAfterRegistering()
+    public function testCanUseTestThemeAfterRegistering(): void
     {
         ThemeFixture::registerTestThemes();
         ThemeFixture::setCurrentTheme('Custom/default');

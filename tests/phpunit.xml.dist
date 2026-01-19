@@ -14,13 +14,13 @@
 >
     <testsuites>
         <testsuite name="TddWizard_Fixtures Integration Tests">
-            <directory suffix="Test.php">../../../vendor/tddwizard/magento2-fixtures/tests</directory>
+            <directory suffix="Test.php">../../../vendor/hardman-commerce/magento2-fixtures/tests</directory>
         </testsuite>
     </testsuites>
     <!-- Code coverage filters -->
     <filter>
         <whitelist>
-            <directory suffix=".php">../../../vendor/tddwizard/magento2-fixtures/src</directory>
+            <directory suffix=".php">../../../vendor/hardman-commerce/magento2-fixtures/src</directory>
         </whitelist>
     </filter>
     <!-- PHP INI settings and constants definition -->

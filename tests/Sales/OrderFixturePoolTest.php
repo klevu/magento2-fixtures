@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace TddWizard\Fixtures\Sales;
@@ -13,17 +14,17 @@ use PHPUnit\Framework\TestCase;
  */
 class OrderFixturePoolTest extends TestCase
 {
-    /**
-     * @var OrderFixturePool
-     */
-    private $orderFixtures;
+    private OrderFixturePool $orderFixtures;
 
     protected function setUp(): void
     {
         $this->orderFixtures = new OrderFixturePool();
     }
 
-    public function testLastOrderFixtureReturnedByDefault()
+    /**
+     * @throws \Exception
+     */
+    public function testLastOrderFixtureReturnedByDefault(): void
     {
         $firstOrder = $this->createOrder();
         $lastOrder = $this->createOrder();
@@ -33,13 +34,16 @@ class OrderFixturePoolTest extends TestCase
         $this->assertEquals($lastOrder->getId(), $orderFixture->getId());
     }
 
-    public function testExceptionThrownWhenAccessingEmptyOrderPool()
+    public function testExceptionThrownWhenAccessingEmptyOrderPool(): void
     {
         $this->expectException(\OutOfBoundsException::class);
         $this->orderFixtures->get();
     }
 
-    public function testOrderFixtureReturnedByKey()
+    /**
+     * @throws \Exception
+     */
+    public function testOrderFixtureReturnedByKey(): void
     {
         $firstOrder = $this->createOrder();
         $lastOrder = $this->createOrder();
@@ -49,7 +53,10 @@ class OrderFixturePoolTest extends TestCase
         $this->assertEquals($firstOrder->getId(), $orderFixture->getId());
     }
 
-    public function testExceptionThrownWhenAccessingNonexistingKey()
+    /**
+     * @throws \Exception
+     */
+    public function testExceptionThrownWhenAccessingNonexistingKey(): void
     {
         $order = $this->createOrder();
         $this->orderFixtures->add($order, 'foo');
@@ -58,7 +65,6 @@ class OrderFixturePoolTest extends TestCase
     }
 
     /**
-     * @return Order
      * @throws \Exception
      */
     private function createOrder(): Order

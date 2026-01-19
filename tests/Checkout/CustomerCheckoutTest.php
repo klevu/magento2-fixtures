@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TddWizard\Fixtures\Checkout;
 
 use PHPUnit\Framework\TestCase;
-use TddWizard\Fixtures\Catalog\ProductBuilder;
-use TddWizard\Fixtures\Catalog\ProductFixturePool;
+use TddWizard\Fixtures\Catalog\Product\ProductBuilder;
+use TddWizard\Fixtures\Catalog\Product\ProductFixturePool;
 use TddWizard\Fixtures\Customer\AddressBuilder;
 use TddWizard\Fixtures\Customer\CustomerBuilder;
 use TddWizard\Fixtures\Customer\CustomerFixturePool;
@@ -14,36 +16,37 @@ use TddWizard\Fixtures\Customer\CustomerFixturePool;
  */
 class CustomerCheckoutTest extends TestCase
 {
-    /**
-     * @var CustomerFixturePool
-     */
-    private $customerFixtures;
-    /**
-     * @var ProductFixturePool
-     */
-    private $productFixtures;
+    private CustomerFixturePool $customerFixtures;
+    private ProductFixturePool $productFixtures;
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->productFixtures = new ProductFixturePool();
         $this->customerFixtures = new CustomerFixturePool();
         $this->customerFixtures->add(
-            CustomerBuilder::aCustomer()->withAddresses(
-                AddressBuilder::anAddress()->asDefaultBilling()->asDefaultShipping()
-            )->build()
+            customer: CustomerBuilder::aCustomer()->withAddresses(
+                addressBuilders: AddressBuilder::anAddress()->asDefaultBilling()->asDefaultShipping(),
+            )->build(),
         );
         $this->productFixtures->add(
-            ProductBuilder::aSimpleProduct()->withPrice(10)->build(),
-            'simple'
+            product: ProductBuilder::aSimpleProduct()->withPrice(price: 10)->build(),
+            key: 'simple',
         );
         $this->productFixtures->add(
-            ProductBuilder::aVirtualProduct()->withPrice(10)->build(),
-            'virtual'
+            product: ProductBuilder::aVirtualProduct()->withPrice(price: 10)->build(),
+            key: 'virtual',
         );
     }
 
+    /**
+     * @throws \Exception
+     */
     protected function tearDown(): void
     {
+        parent::tearDown();
+
         $this->customerFixtures->rollback();
         $this->productFixtures->rollback();
     }
@@ -52,13 +55,16 @@ class CustomerCheckoutTest extends TestCase
      * @magentoAppIsolation enabled
      * @magentoAppArea frontend
      */
-    public function testCreateOrderFromCart()
+    public function testCreateOrderFromCart(): void
     {
-        $this->customerFixtures->get()->login();
+        $customerFixture = $this->customerFixtures->get();
+        $customerFixture->login();
         $checkout = CustomerCheckout::fromCart(
-            CartBuilder::forCurrentSession()->withSimpleProduct(
-                $this->productFixtures->get('simple')->getSku()
-            )->build()
+            CartBuilder::forCurrentSession()
+                ->withCustomer(customer: $customerFixture->getCustomer())
+                ->withSimpleProduct(
+                    sku: $this->productFixtures->get('simple')->getSku(),
+                )->build(),
         );
         $order = $checkout->placeOrder();
         $this->assertNotEmpty($order->getEntityId(), 'Order should be saved successfully');
@@ -69,20 +75,26 @@ class CustomerCheckoutTest extends TestCase
      * @magentoAppIsolation enabled
      * @magentoAppArea frontend
      */
-    public function testCreateOrderFromCartWithVirtualProduct()
+    public function testCreateOrderFromCartWithVirtualProduct(): void
     {
-        $this->customerFixtures->get()->login();
+        $customerFixture = $this->customerFixtures->get();
+        $customerFixture->login();
         $checkout = CustomerCheckout::fromCart(
-            CartBuilder::forCurrentSession()->withSimpleProduct(
-                $this->productFixtures->get('virtual')->getSku()
-            )->build()
+            CartBuilder::forCurrentSession()
+                ->withCustomer(customer: $customerFixture->getCustomer())
+                ->withSimpleProduct(
+                    sku: $this->productFixtures->get(key: 'virtual')->getSku(),
+                )->build(),
         );
         $order = $checkout->placeOrder();
-        $this->assertNotEmpty($order->getEntityId(), 'Order should be saved successfully');
+        $this->assertNotEmpty(actual: $order->getEntityId(), message: 'Order should be saved successfully');
         $this->assertEmpty(
-            $order->getExtensionAttributes()->getShippingAssignments(),
-            'Order with virtual product should not have any shipping assignments'
+            actual: $order->getExtensionAttributes()->getShippingAssignments(),
+            message: 'Order with virtual product should not have any shipping assignments',
         );
-        $this->assertEmpty($order->getShippingDescription(), 'Order should not have a shipping description');
+        $this->assertEmpty(
+            actual: $order->getShippingDescription(),
+            message: 'Order should not have a shipping description',
+        );
     }
 }

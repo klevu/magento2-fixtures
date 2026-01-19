@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TddWizard\Fixtures\Sales;
 
 use Magento\Framework\Exception\LocalizedException;
@@ -7,7 +9,7 @@ use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
-use TddWizard\Fixtures\Catalog\ProductBuilder;
+use TddWizard\Fixtures\Catalog\Product\ProductBuilder;
 use TddWizard\Fixtures\Checkout\CartBuilder;
 use TddWizard\Fixtures\Customer\AddressBuilder;
 use TddWizard\Fixtures\Customer\CustomerBuilder;
@@ -21,12 +23,8 @@ class OrderBuilderTest extends TestCase
     /**
      * @var OrderFixture[]
      */
-    private $orderFixtures;
-
-    /**
-     * @var OrderRepositoryInterface
-     */
-    private $orderRepository;
+    private array $orderFixtures;
+    private OrderRepositoryInterface $orderRepository;
 
     protected function setUp(): void
     {
@@ -47,16 +45,15 @@ class OrderBuilderTest extends TestCase
 
     /**
      * Create an order for an internally generated customer and internally generated product(s).
-     *
      * Easy to set up, least flexible.
      *
      * @test
      * @throws \Exception
      */
-    public function createOrder()
+    public function createOrder(): void
     {
         $orderFixture = new OrderFixture(
-            OrderBuilder::anOrder()->build()
+            OrderBuilder::anOrder()->build(),
         );
         $this->orderFixtures[] = $orderFixture;
 
@@ -66,16 +63,15 @@ class OrderBuilderTest extends TestCase
 
     /**
      * Create an order for an internally generated customer.
-     *
      * Control the product included with the order, use random item quantities.
      *
      * @test
      * @throws \Exception
      */
-    public function createOrderWithProduct()
+    public function createOrderWithProduct(): void
     {
         $orderFixture = new OrderFixture(
-            OrderBuilder::anOrder()->withProducts(ProductBuilder::aSimpleProduct())->build()
+            OrderBuilder::anOrder()->withProducts(ProductBuilder::aSimpleProduct())->build(),
         );
         $this->orderFixtures[] = $orderFixture;
 
@@ -85,54 +81,58 @@ class OrderBuilderTest extends TestCase
 
     /**
      * Create an order for an internally generated customer with multiple products.
-     *
      * Control the products included with the order, use random item quantities.
      *
      * @test
      * @throws \Exception
      */
-    public function createOrderWithProducts()
+    public function createOrderWithProducts(): void
     {
         $orderFixture = new OrderFixture(
             OrderBuilder::anOrder()->withProducts(
                 ProductBuilder::aSimpleProduct()->withSku('foo'),
-                ProductBuilder::aSimpleProduct()->withSku('bar')
-            )->build()
+                ProductBuilder::aSimpleProduct()->withSku('bar'),
+            )->build(),
         );
         $this->orderFixtures[] = $orderFixture;
 
-        self::assertInstanceOf(OrderInterface::class, $this->orderRepository->get($orderFixture->getId()));
-        self::assertCount(2, $orderFixture->getOrderItemQtys());
+        self::assertInstanceOf(
+            expected: OrderInterface::class,
+            actual: $this->orderRepository->get($orderFixture->getId()),
+        );
+        self::assertCount(expectedCount: 2, haystack: $orderFixture->getOrderItemQtys());
     }
 
     /**
      * Create an order for a given customer with internally generated product(s).
-     *
      * Control the customer placing the order.
      *
      * @test
      * @throws \Exception
      */
-    public function createOrderWithCustomer()
+    public function createOrderWithCustomer(): void
     {
         $customerEmail = 'test@example.com';
-        $customerBuilder = CustomerBuilder::aCustomer()
+        $customer = CustomerBuilder::aCustomer()
             ->withEmail($customerEmail)
-            ->withAddresses(AddressBuilder::anAddress()->asDefaultBilling()->asDefaultShipping());
+            ->withAddresses(AddressBuilder::anAddress()->asDefaultBilling()->asDefaultShipping())
+            ->build();
 
         $orderFixture = new OrderFixture(
-            OrderBuilder::anOrder()->withCustomer($customerBuilder)->build()
+            OrderBuilder::anOrder()->withCustomer(customer: $customer)->build(),
         );
         $this->orderFixtures[] = $orderFixture;
 
-        self::assertInstanceOf(OrderInterface::class, $this->orderRepository->get($orderFixture->getId()));
-        self::assertSame($customerEmail, $orderFixture->getCustomerEmail());
-        self::assertNotEmpty($orderFixture->getOrderItemQtys());
+        self::assertInstanceOf(
+            expected: OrderInterface::class,
+            actual: $this->orderRepository->get(id: $orderFixture->getId()),
+        );
+        self::assertSame(expected: $customerEmail, actual: $orderFixture->getCustomerEmail());
+        self::assertNotEmpty(actual: $orderFixture->getOrderItemQtys());
     }
 
     /**
      * Create an order for a given cart.
-     *
      * Complex to set up, most flexible:
      * - define products
      * - define customer
@@ -142,7 +142,7 @@ class OrderBuilderTest extends TestCase
      * @test
      * @throws \Exception
      */
-    public function createOrderWithCart()
+    public function createOrderWithCart(): void
     {
         $cartItems = ['foo' => 2, 'bar' => 3];
         $customerEmail = 'test@example.com';
@@ -151,34 +151,37 @@ class OrderBuilderTest extends TestCase
 
         $productBuilders = [];
         foreach ($cartItems as $sku => $qty) {
-            $productBuilders[] = ProductBuilder::aSimpleProduct()->withSku($sku);
+            $productBuilders[] = ProductBuilder::aSimpleProduct()->withSku(sku: $sku);
         }
 
         $customerBuilder = CustomerBuilder::aCustomer();
         $customerBuilder = $customerBuilder
-            ->withEmail($customerEmail)
-            ->withAddresses(AddressBuilder::anAddress()->asDefaultBilling()->asDefaultShipping());
+            ->withEmail(email: $customerEmail)
+            ->withAddresses(addressBuilders: AddressBuilder::anAddress()->asDefaultBilling()->asDefaultShipping());
 
+        $customer = $customerBuilder->build();
         $cartBuilder = CartBuilder::forCurrentSession();
+        $cartBuilder->withCustomer(customer: $customer);
         foreach ($cartItems as $sku => $qty) {
-            $cartBuilder = $cartBuilder->withSimpleProduct($sku, $qty);
+            $cartBuilder = $cartBuilder->withSimpleProduct(sku: $sku, qty: $qty);
         }
 
         $orderFixture = new OrderFixture(
             OrderBuilder::anOrder()
                 ->withProducts(...$productBuilders)
-                ->withCustomer($customerBuilder)
-                ->withCart($cartBuilder)
-                ->withPaymentMethod($paymentMethod)->withShippingMethod($shippingMethod)
-                ->build()
+                ->withCustomer(customer: $customer)
+                ->withCart(cartBuilder: $cartBuilder)
+                ->withPaymentMethod(paymentMethod: $paymentMethod)
+                ->withShippingMethod(shippingMethod: $shippingMethod)
+                ->build(),
         );
         $this->orderFixtures[] = $orderFixture;
 
-        self::assertInstanceOf(OrderInterface::class, $this->orderRepository->get($orderFixture->getId()));
-        self::assertSame($customerEmail, $orderFixture->getCustomerEmail());
-        self::assertEmpty(array_diff($cartItems, $orderFixture->getOrderItemQtys()));
-        self::assertSame($paymentMethod, $orderFixture->getPaymentMethod());
-        self::assertSame($shippingMethod, $orderFixture->getShippingMethod());
+        self::assertInstanceOf(expected: OrderInterface::class, actual: $this->orderRepository->get($orderFixture->getId()));
+        self::assertSame(expected: $customerEmail, actual: $orderFixture->getCustomerEmail());
+        self::assertEmpty(actual: array_diff($cartItems, $orderFixture->getOrderItemQtys()));
+        self::assertSame(expected: $paymentMethod, actual: $orderFixture->getPaymentMethod());
+        self::assertSame(expected: $shippingMethod, actual: $orderFixture->getShippingMethod());
     }
 
     /**
@@ -187,7 +190,7 @@ class OrderBuilderTest extends TestCase
      * @test
      * @throws \Exception
      */
-    public function createMultipleOrders()
+    public function createMultipleOrders(): void
     {
         $shippingMethod = 'flatrate_flatrate';
 
@@ -195,7 +198,7 @@ class OrderBuilderTest extends TestCase
         $orderFixture = new OrderFixture(
             OrderBuilder::anOrder()
                 ->withShippingMethod($shippingMethod)
-                ->build()
+                ->build(),
         );
         $this->orderFixtures[] = $orderFixture;
 
@@ -206,7 +209,7 @@ class OrderBuilderTest extends TestCase
                 ->withShippingMethod($shippingMethod)
                 ->withProducts(ProductBuilder::aSimpleProduct()->withSku('bar'))
                 ->withCart($cartBuilder->withSimpleProduct('bar', 3))
-                ->build()
+                ->build(),
         );
         $this->orderFixtures[] = $orderWithCartFixture;
 
@@ -219,10 +222,11 @@ class OrderBuilderTest extends TestCase
                         ->withAddresses(
                             AddressBuilder::anAddress('de_AT')
                                 ->asDefaultBilling()
-                                ->asDefaultShipping()
+                                ->asDefaultShipping(),
                         )
+                        ->build(),
                 )
-                ->build()
+                ->build(),
         );
         $this->orderFixtures[] = $orderWithCustomerFixture;
 
@@ -242,14 +246,14 @@ class OrderBuilderTest extends TestCase
      * @test
      * @throws \Exception
      */
-    public function createIntlOrders()
+    public function createIntlOrders(): void
     {
         $atLocale = 'de_AT';
         $atOrder = OrderBuilder::anOrder()
             ->withCustomer(
                 CustomerBuilder::aCustomer()->withAddresses(
-                    AddressBuilder::anAddress($atLocale)->asDefaultBilling()->asDefaultShipping()
-                )
+                    AddressBuilder::anAddress($atLocale)->asDefaultBilling()->asDefaultShipping(),
+                )->build(),
             )
             ->build();
         $this->orderFixtures[] = new OrderFixture($atOrder);
@@ -258,8 +262,8 @@ class OrderBuilderTest extends TestCase
         $usOrder = OrderBuilder::anOrder()
             ->withCustomer(
                 CustomerBuilder::aCustomer()->withAddresses(
-                    AddressBuilder::anAddress($usLocale)->asDefaultBilling()->asDefaultShipping()
-                )
+                    AddressBuilder::anAddress($usLocale)->asDefaultBilling()->asDefaultShipping(),
+                )->build(),
             )
             ->build();
         $this->orderFixtures[] = new OrderFixture($usOrder);
@@ -268,8 +272,8 @@ class OrderBuilderTest extends TestCase
         $caOrder = OrderBuilder::anOrder()
             ->withCustomer(
                 CustomerBuilder::aCustomer()->withAddresses(
-                    AddressBuilder::anAddress($caLocale)->asDefaultBilling()->asDefaultShipping()
-                )
+                    AddressBuilder::anAddress($caLocale)->asDefaultBilling()->asDefaultShipping(),
+                )->build(),
             )
             ->build();
         $this->orderFixtures[] = new OrderFixture($caOrder);

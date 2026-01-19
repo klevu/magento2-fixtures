@@ -1,11 +1,14 @@
 <?php
+
 declare(strict_types=1);
 
 namespace TddWizard\Fixtures\Customer;
 
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Customer\Api\Data\CustomerInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\ObjectManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 
@@ -15,22 +18,20 @@ use PHPUnit\Framework\TestCase;
  */
 class CustomerFixturePoolTest extends TestCase
 {
-    /**
-     * @var CustomerFixturePool
-     */
-    private $customerFixtures;
-    /**
-     * @var CustomerRepositoryInterface
-     */
-    private $customerRepository;
+    private CustomerFixturePool $customerFixtures;
+    private CustomerRepositoryInterface $customerRepository;
+    private ?ObjectManagerInterface $objectManager = null;
 
     protected function setUp(): void
     {
+        parent::setUp();
+
+        $this->objectManager = Bootstrap::getObjectManager();
         $this->customerFixtures = new CustomerFixturePool();
-        $this->customerRepository = Bootstrap::getObjectManager()->create(CustomerRepositoryInterface::class);
+        $this->customerRepository = $this->objectManager->create(CustomerRepositoryInterface::class);
     }
 
-    public function testLastCustomerFixtureReturnedByDefault()
+    public function testLastCustomerFixtureReturnedByDefault(): void
     {
         $firstCustomer = $this->createCustomer();
         $lastCustomer = $this->createCustomer();
@@ -40,13 +41,13 @@ class CustomerFixturePoolTest extends TestCase
         $this->assertEquals($lastCustomer->getId(), $customerFixture->getId());
     }
 
-    public function testExceptionThrownWhenAccessingEmptyCustomerPool()
+    public function testExceptionThrownWhenAccessingEmptyCustomerPool(): void
     {
         $this->expectException(\OutOfBoundsException::class);
         $this->customerFixtures->get();
     }
 
-    public function testCustomerFixtureReturnedByKey()
+    public function testCustomerFixtureReturnedByKey(): void
     {
         $firstCustomer = $this->createCustomer();
         $lastCustomer = $this->createCustomer();
@@ -56,7 +57,7 @@ class CustomerFixturePoolTest extends TestCase
         $this->assertEquals($firstCustomer->getId(), $customerFixture->getId());
     }
 
-    public function testExceptionThrownWhenAccessingNonexistingKey()
+    public function testExceptionThrownWhenAccessingNonexistingKey(): void
     {
         $customer = $this->createCustomer();
         $this->customerFixtures->add($customer, 'foo');
@@ -64,7 +65,10 @@ class CustomerFixturePoolTest extends TestCase
         $this->customerFixtures->get('bar');
     }
 
-    public function testRollbackRemovesCustomersFromPool()
+    /**
+     * @throws LocalizedException
+     */
+    public function testRollbackRemovesCustomersFromPool(): void
     {
         $customer = $this->createCustomerInDb();
         $this->customerFixtures->add($customer);
@@ -72,7 +76,12 @@ class CustomerFixturePoolTest extends TestCase
         $this->expectException(\OutOfBoundsException::class);
         $this->customerFixtures->get();
     }
-    public function testRollbackDeletesCustomersFromDb()
+
+    /**
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     */
+    public function testRollbackDeletesCustomersFromDb(): void
     {
         $customer = $this->createCustomerInDb();
         $this->customerFixtures->add($customer);
@@ -83,24 +92,21 @@ class CustomerFixturePoolTest extends TestCase
 
     /**
      * Creates a dummy customer object
-     *
-     * @return CustomerInterface
-     * @throws \Magento\Framework\Exception\LocalizedException
      */
     private function createCustomer(): CustomerInterface
     {
         static $nextId = 1;
         /** @var CustomerInterface $customer */
-        $customer = Bootstrap::getObjectManager()->create(CustomerInterface::class);
+        $customer = $this->objectManager->create(CustomerInterface::class);
         $customer->setId($nextId++);
+
         return $customer;
     }
 
     /**
      * Uses builder to create a customer
      *
-     * @return CustomerInterface
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     private function createCustomerInDb(): CustomerInterface
     {

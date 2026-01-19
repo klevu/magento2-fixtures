@@ -1,13 +1,17 @@
 {
-    "name": "klevu/magento2-fixtures-fork",
+    "name": "hardman-commerce/magento2-fixtures",
     "description": "Fixture library for Magento 2 integration tests",
     "type": "magento2-module",
-    "version" : "1.1.5",
+    "version": "2.0.1",
     "license": "MIT",
     "authors": [
         {
             "name": "Fabian Schmengler",
             "email": "fs@integer-net.de"
+        },
+        {
+            "name": "Richard Hardman",
+            "email": "rhardman@pm.me"
         }
     ],
     "minimum-stability": "stable",
@@ -31,18 +35,18 @@
         }
     ],
     "require": {
-        "php": "^7.1|^8.0",
-        "magento/framework": "^102.0|^103.0",
+        "php": "^8.1",
+        "magento/framework": "^103.0.4",
         "magento/zendframework1": "^1.14",
-        "magento/module-catalog": "^103.0|^104.0",
-        "magento/module-catalog-inventory": "^100.3",
-        "magento/module-checkout": "^100.3",
-        "magento/module-customer": "^102.0|^103.0",
-        "magento/module-directory": "^100.3",
-        "magento/module-indexer": "^100.3",
-        "magento/module-payment": "^100.3",
-        "magento/module-quote": "^101.1",
-        "magento/module-sales": "^102.0|^103.0",
+        "magento/module-catalog": "^104.0.4",
+        "magento/module-catalog-inventory": "^100.4.4",
+        "magento/module-checkout": "^100.4.4",
+        "magento/module-customer": "^103.0.4",
+        "magento/module-directory": "^100.4.4",
+        "magento/module-indexer": "^100.4.4",
+        "magento/module-payment": "^100.4.4",
+        "magento/module-quote": "^101.2.4",
+        "magento/module-sales": "^103.0.4",
         "fakerphp/faker": "^1.9.1"
     },
     "require-dev": {

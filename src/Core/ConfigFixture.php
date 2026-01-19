@@ -14,9 +14,6 @@ class ConfigFixture
 {
     /**
      * Sets configuration in default scope AND all stores, no matter what was configured previously
-     *
-     * @param string $path
-     * @param mixed $value
      */
     public static function setGlobal(string $path, mixed $value): void
     {
@@ -52,19 +49,13 @@ class ConfigFixture
         );
     }
 
-    /**
-     * @return MutableScopeConfigInterface
-     */
     private static function scopeConfig(): MutableScopeConfigInterface
     {
-        return Bootstrap::getObjectManager()->get(MutableScopeConfigInterface::class);
+        return Bootstrap::getObjectManager()->get(type: MutableScopeConfigInterface::class);
     }
 
-    /**
-     * @return StoreRepositoryInterface
-     */
     private static function storeRepository(): StoreRepositoryInterface
     {
-        return Bootstrap::getObjectManager()->get(StoreRepositoryInterface::class);
+        return Bootstrap::getObjectManager()->get(type: StoreRepositoryInterface::class);
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace TddWizard\Fixtures\Customer;
@@ -13,43 +14,34 @@ use Magento\TestFramework\Helper\Bootstrap;
  */
 class CustomerFixtureRollback
 {
-    /**
-     * @var Registry
-     */
-    private $registry;
-    /**
-     * @var CustomerRepositoryInterface
-     */
-    private $customerRepository;
-
-    public function __construct(Registry $registry, CustomerRepositoryInterface $customerRepository)
-    {
-        $this->registry = $registry;
-        $this->customerRepository = $customerRepository;
+    public function __construct(
+        private readonly Registry $registry,
+        private readonly CustomerRepositoryInterface $customerRepository,
+    ) {
     }
 
     public static function create(): CustomerFixtureRollback
     {
         $objectManager = Bootstrap::getObjectManager();
+
         return new self(
-            $objectManager->get(Registry::class),
-            $objectManager->get(CustomerRepositoryInterface::class)
+            registry: $objectManager->get(type: Registry::class),
+            customerRepository: $objectManager->get(type: CustomerRepositoryInterface::class),
         );
     }
 
     /**
-     * @param CustomerFixture ...$customerFixtures
      * @throws LocalizedException
      */
     public function execute(CustomerFixture ...$customerFixtures): void
     {
-        $this->registry->unregister('isSecureArea');
-        $this->registry->register('isSecureArea', true);
+        $this->registry->unregister(key: 'isSecureArea');
+        $this->registry->register(key: 'isSecureArea', value: true);
 
         foreach ($customerFixtures as $customerFixture) {
-            $this->customerRepository->deleteById($customerFixture->getId());
+            $this->customerRepository->deleteById(customerId: $customerFixture->getId());
         }
 
-        $this->registry->unregister('isSecureArea');
+        $this->registry->unregister(key: 'isSecureArea');
     }
 }

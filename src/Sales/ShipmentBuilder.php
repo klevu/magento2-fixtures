@@ -1,9 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace TddWizard\Fixtures\Sales;
 
 use Magento\Sales\Api\Data\ShipmentInterface;
+use Magento\Sales\Api\Data\ShipmentItemCreationInterface;
 use Magento\Sales\Api\Data\ShipmentItemCreationInterfaceFactory;
 use Magento\Sales\Api\Data\ShipmentTrackCreationInterface;
 use Magento\Sales\Api\Data\ShipmentTrackCreationInterfaceFactory;
@@ -18,75 +20,42 @@ use Magento\TestFramework\Helper\Bootstrap;
 class ShipmentBuilder
 {
     /**
-     * @var ShipmentItemCreationInterfaceFactory
-     */
-    private $itemFactory;
-
-    /**
-     * @var ShipmentTrackCreationInterfaceFactory
-     */
-    private $trackFactory;
-
-    /**
-     * @var ShipOrderInterface
-     */
-    private $shipOrder;
-
-    /**
-     * @var ShipmentRepositoryInterface
-     */
-    private $shipmentRepository;
-
-    /**
-     * @var Order
-     */
-    private $order;
-
-    /**
      * @var int[]
      */
-    private $orderItems;
-
+    private array $orderItems;
     /**
      * @var string[]
      */
-    private $trackingNumbers;
+    private array $trackingNumbers;
 
     final public function __construct(
-        ShipmentItemCreationInterfaceFactory $itemFactory,
-        ShipmentTrackCreationInterfaceFactory $trackFactory,
-        ShipOrderInterface $shipOrder,
-        ShipmentRepositoryInterface $shipmentRepository,
-        Order $order
+        private readonly ShipmentItemCreationInterfaceFactory $itemFactory,
+        private readonly ShipmentTrackCreationInterfaceFactory $trackFactory,
+        private readonly ShipOrderInterface $shipOrder,
+        private readonly ShipmentRepositoryInterface $shipmentRepository,
+        private readonly Order $order,
     ) {
-        $this->itemFactory = $itemFactory;
-        $this->trackFactory = $trackFactory;
-        $this->shipOrder = $shipOrder;
-        $this->shipmentRepository = $shipmentRepository;
-        $this->order = $order;
-
         $this->orderItems = [];
         $this->trackingNumbers = [];
     }
 
     public static function forOrder(
-        Order $order
+        Order $order,
     ): ShipmentBuilder {
         $objectManager = Bootstrap::getObjectManager();
 
         return new static(
-            $objectManager->create(ShipmentItemCreationInterfaceFactory::class),
-            $objectManager->create(ShipmentTrackCreationInterfaceFactory::class),
-            $objectManager->create(ShipOrderInterface::class),
-            $objectManager->create(ShipmentRepositoryInterface::class),
-            $order
+            itemFactory: $objectManager->create(type: ShipmentItemCreationInterfaceFactory::class),
+            trackFactory: $objectManager->create(type: ShipmentTrackCreationInterfaceFactory::class),
+            shipOrder: $objectManager->create(type: ShipOrderInterface::class),
+            shipmentRepository: $objectManager->create(type: ShipmentRepositoryInterface::class),
+            order: $order,
         );
     }
 
     public function withItem(int $orderItemId, int $qty): ShipmentBuilder
     {
         $builder = clone $this;
-
         $builder->orderItems[$orderItemId] = $qty;
 
         return $builder;
@@ -95,7 +64,6 @@ class ShipmentBuilder
     public function withTrackingNumbers(string ...$trackingNumbers): ShipmentBuilder
     {
         $builder = clone $this;
-
         $builder->trackingNumbers = $trackingNumbers;
 
         return $builder;
@@ -107,44 +75,41 @@ class ShipmentBuilder
         $tracks = $this->buildTracks();
 
         $shipmentId = $this->shipOrder->execute(
-            $this->order->getEntityId(),
-            $shipmentItems,
-            false,
-            false,
-            null,
-            $tracks
+            orderId: $this->order->getEntityId(),
+            items: $shipmentItems,
+            tracks: $tracks,
         );
 
-        $shipment = $this->shipmentRepository->get($shipmentId);
+        $shipment = $this->shipmentRepository->get(id: $shipmentId);
         if (!empty($this->trackingNumbers)) {
             $shipment->setShippingLabel('%PDF-1.4');
-            $this->shipmentRepository->save($shipment);
+            $this->shipmentRepository->save(entity: $shipment);
         }
 
         return $shipment;
     }
 
     /**
-     * @return \Magento\Sales\Api\Data\ShipmentTrackCreationInterface[]
+     * @return ShipmentTrackCreationInterface[]
      */
     private function buildTracks(): array
     {
         return array_map(
-            function (string $trackingNumber): ShipmentTrackCreationInterface {
-                $carrierCode = strtok((string)$this->order->getShippingMethod(), '_');
+            callback: function (string $trackingNumber): ShipmentTrackCreationInterface {
+                $carrierCode = strtok(string: (string)$this->order->getShippingMethod(), token: '_');
                 $track = $this->trackFactory->create();
                 $track->setCarrierCode($carrierCode);
-                $track->setTitle($carrierCode);
-                $track->setTrackNumber($trackingNumber);
+                $track->setTitle(title: $carrierCode);
+                $track->setTrackNumber(trackNumber: $trackingNumber);
 
                 return $track;
             },
-            $this->trackingNumbers
+            array: $this->trackingNumbers,
         );
     }
 
     /**
-     * @return \Magento\Sales\Api\Data\ShipmentItemCreationInterface[]
+     * @return ShipmentItemCreationInterface[]
      */
     private function buildShipmentItems(): array
     {
@@ -153,9 +118,10 @@ class ShipmentBuilder
         foreach ($this->orderItems as $orderItemId => $qty) {
             $shipmentItem = $this->itemFactory->create();
             $shipmentItem->setOrderItemId($orderItemId);
-            $shipmentItem->setQty($qty);
+            $shipmentItem->setQty(qty: $qty);
             $shipmentItems[] = $shipmentItem;
         }
+
         return $shipmentItems;
     }
 }

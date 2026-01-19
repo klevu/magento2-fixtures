@@ -1,10 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
 namespace TddWizard\Fixtures\Sales;
 
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 
@@ -14,18 +16,10 @@ use PHPUnit\Framework\TestCase;
  */
 class OrderFixturePoolRollbackTest extends TestCase
 {
-    /**
-     * @var \Magento\Sales\Model\Order
-     */
-    private static $order;
-    /**
-     * @var OrderFixturePool
-     */
-    private $orderFixtures;
-    /**
-     * @var OrderRepositoryInterface
-     */
-    private $orderRepository;
+    private static Order $order;
+    private OrderFixturePool $orderFixtures;
+
+    private OrderRepositoryInterface $orderRepository;
 
     public static function setUpBeforeClass(): void
     {
@@ -38,7 +32,7 @@ class OrderFixturePoolRollbackTest extends TestCase
         $this->orderRepository = Bootstrap::getObjectManager()->create(OrderRepositoryInterface::class);
     }
 
-    public function testRollbackRemovesOrdersFromPool()
+    public function testRollbackRemovesOrdersFromPool(): void
     {
         $this->orderFixtures->add(self::$order);
         $this->orderFixtures->rollback();
@@ -46,7 +40,7 @@ class OrderFixturePoolRollbackTest extends TestCase
         $this->orderFixtures->get();
     }
 
-    public function testRollbackWorksWithKeys()
+    public function testRollbackWorksWithKeys(): void
     {
         $this->orderFixtures->add(self::$order, 'key');
         $this->orderFixtures->rollback();
@@ -54,7 +48,7 @@ class OrderFixturePoolRollbackTest extends TestCase
         $this->orderFixtures->get();
     }
 
-    public function testRollbackDeletesOrdersFromDb()
+    public function testRollbackDeletesOrdersFromDb(): void
     {
         $this->orderFixtures->add(self::$order);
         $this->orderFixtures->rollback();

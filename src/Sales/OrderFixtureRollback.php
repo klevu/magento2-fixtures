@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace TddWizard\Fixtures\Sales;
@@ -18,36 +19,12 @@ use Magento\TestFramework\Helper\Bootstrap;
  */
 class OrderFixtureRollback
 {
-    /**
-     * @var Registry
-     */
-    private $registry;
-
-    /**
-     * @var OrderRepository
-     */
-    private $orderRepository;
-
-    /**
-     * @var CustomerRepositoryInterface
-     */
-    private $customerRepository;
-
-    /**
-     * @var ProductRepositoryInterface
-     */
-    private $productRepository;
-
     public function __construct(
-        Registry $registry,
-        OrderRepository $orderRepository,
-        CustomerRepositoryInterface $customerRepository,
-        ProductRepositoryInterface $productRepository
+        private readonly Registry $registry,
+        private readonly OrderRepository $orderRepository,
+        private readonly CustomerRepositoryInterface $customerRepository,
+        private readonly ProductRepositoryInterface $productRepository,
     ) {
-        $this->registry = $registry;
-        $this->orderRepository = $orderRepository;
-        $this->customerRepository = $customerRepository;
-        $this->productRepository = $productRepository;
     }
 
     public static function create(): OrderFixtureRollback
@@ -55,42 +32,45 @@ class OrderFixtureRollback
         $objectManager = Bootstrap::getObjectManager();
 
         return new self(
-            $objectManager->get(Registry::class),
-            $objectManager->get(OrderRepositoryInterface::class),
-            $objectManager->get(CustomerRepositoryInterface::class),
-            $objectManager->get(ProductRepositoryInterface::class)
+            registry: $objectManager->get(type: Registry::class),
+            orderRepository: $objectManager->get(type: OrderRepositoryInterface::class),
+            customerRepository: $objectManager->get(type: CustomerRepositoryInterface::class),
+            productRepository: $objectManager->get(type: ProductRepositoryInterface::class),
         );
     }
 
     /**
      * Roll back orders with associated customers and products.
      *
-     * @param OrderFixture ...$orderFixtures
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */
     public function execute(OrderFixture ...$orderFixtures): void
     {
-        $this->registry->unregister('isSecureArea');
-        $this->registry->register('isSecureArea', true);
+        $this->registry->unregister(key: 'isSecureArea');
+        $this->registry->register(key: 'isSecureArea', value: true);
 
         foreach ($orderFixtures as $orderFixture) {
-            $orderItems = $this->orderRepository->get($orderFixture->getId())->getItems();
+            $orderItems = $this->orderRepository->get(id: $orderFixture->getId())->getItems();
 
-            $this->orderRepository->deleteById($orderFixture->getId());
-            $this->customerRepository->deleteById($orderFixture->getCustomerId());
+            $this->orderRepository->deleteById(id: $orderFixture->getId());
+            try {
+                $this->customerRepository->deleteById(customerId: $orderFixture->getCustomerId());
+            } catch (\Exception) {
+                // customer already deleted or guest
+            }
             array_walk(
-                $orderItems,
-                function (OrderItemInterface $orderItem) {
+                array: $orderItems,
+                callback: function (OrderItemInterface $orderItem) {
                     try {
-                        $this->productRepository->deleteById($orderItem->getSku());
-                    } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
+                        $this->productRepository->deleteById(sku: $orderItem->getSku());
+                    } catch (NoSuchEntityException) {
                         // ignore if already deleted
                     }
-                }
+                },
             );
         }
 
-        $this->registry->unregister('isSecureArea');
+        $this->registry->unregister(key: 'isSecureArea');
     }
 }

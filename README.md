@@ -2,20 +2,15 @@
 
 [![Latest Version on Packagist][ico-version]][link-packagist]
 [![Software License][ico-license]](LICENSE.md)
-[![Build Status][ico-travis]][link-travis]
-[![Coverage Status][ico-scrutinizer]][link-scrutinizer]
-[![Quality Score][ico-code-quality]][link-code-quality]
-[![Code Climate](https://img.shields.io/codeclimate/maintainability/tddwizard/magento2-fixtures?style=flat-square)](https://codeclimate.com/github/tddwizard/magento2-fixtures)
 
 ---
 
-Magento 2 Fixtures by Fabian Schmengler
-
-🧙🏻‍♂ https://tddwizard.com/
+Forked from [Magento 2 Fixtures by Fabian Schmengler](https://github.com/tddwizard/magento2-fixtures).  
+Updated with code from [Klevu Test Fixtures](https://github.com/klevu/module-m2-test-fixtures).
 
 ## What is it?
 
-An alternative to the procedural script based fixtures in Magento 2 integration tests.
+An alternative to the procedural script-based fixtures in Magento 2 integration tests.
 
 It aims to be:
 
@@ -27,255 +22,124 @@ It aims to be:
 
 Install it into your Magento 2 project with composer:
 
-    composer require --dev tddwizard/magento2-fixtures
+    composer require --dev hardman-commerce/magento2-fixtures
 
 ## Requirements
 
-- Magento 2.3 or Magento 2.4
-- PHP 7.3 or 7.4 *(7.1 and 7.2 is allowed via composer for full Magento 2.3 compatibility but not tested anymore)*
+- Magento 2.4.4+
+- PHP 8.1+
 
-## Usage examples:
+---
 
-### Customer
+## Documentation:
 
-If you need a customer without specific data, this is all:
+### [Catalog/Attribute](./src/Catalog/Attribute/README.md)
 
-```php
-protected function setUp(): void
-{
-  $this->customerFixture = new CustomerFixture(
-    CustomerBuilder::aCustomer()->build()
-  );
-}
-protected function tearDown(): void
-{
-  $this->customerFixture->rollback();
-}
-```
+Fixtures and Traits to build catalog attributes, including store scope settings.  
+Useful when an attribute is required to create configurable products.
 
-It uses default sample data and a random email address. If you need the ID or email address in the tests, the `CustomerFixture` gives you access:
+### [Catalog/Category](./src/Catalog/Category/README.md)
 
-```php
-$this->customerFixture->getId();
-$this->customerFixture->getEmail();
-```
+Fixtures and Traits to build categories, including store scope settings.
 
-You can configure the builder with attributes:
+### [Catalog/Product](./src/Catalog/Product/README.md)
 
-```php
-CustomerBuilder::aCustomer()
-  ->withEmail('test@example.com')
-  ->withCustomAttributes(
-    [
-      'my_custom_attribute' => 42
-    ]
-  )
-  ->build()
-```
+Fixtures and Traits to build products, including store scope settings.  
+Extended TDDWizard product fixtures to add
 
-You can add addresses to the customer:
+* Tier Prices
+* Images
 
-```php
-CustomerBuilder::aCustomer()
-  ->withAddresses(
-    AddressBuilder::anAddress()->asDefaultBilling(),
-    AddressBuilder::anAddress()->asDefaultShipping(),
-    AddressBuilder::anAddress()
-  )
-  ->build()
-```
+The following product types are covered
 
-Or just one:
+* Simple
+* Virtual
+* Downloadable
+* Grouped
+* Configurable
 
-```php
-CustomerBuilder::aCustomer()
-  ->withAddresses(
-    AddressBuilder::anAddress()->asDefaultBilling()->asDefaultShipping()
-  )
-  ->build()
-```
+Todo:
 
-The `CustomerFixture` also has a shortcut to create a customer session:
+* Bundle
+* Gift Card
 
-```php
-$this->customerFixture->login();
-```
+### [Catalog/Rule](./src/Catalog/Rule/README.md)
 
+Fixtures and Traits to build catalog price rules.
 
+### [Checkout](./src/Checkout/README.md)
 
-### Addresses
+Fixtures and Traits to build Cart and perform a customer checkout.
 
-Similar to the customer builder you can also configure the address builder with custom attributes:
+Add the following product types to the cart:
 
-```php
-AddressBuilder::anAddress()
-  ->withCountryId('DE')
-  ->withCity('Aachen')
-  ->withPostcode('52078')
-  ->withCustomAttributes(
-    [
-      'my_custom_attribute' => 42
-    ]
-  )
-  ->asDefaultShipping()
-```
+* Simple
+* Configurable
+* Grouped
 
-### Product
+Todo:
 
-Product fixtures work similar as customer fixtures:
+* Bundle
+* Gift Card
 
-```php
-protected function setUp(): void
-{
-  $this->productFixture = new ProductFixture(
-    ProductBuilder::aSimpleProduct()
-      ->withPrice(10)
-      ->withCustomAttributes(
-        [
-          'my_custom_attribute' => 42
-        ]
-      )
-      ->build()
-  );
-}
-protected function tearDown(): void
-{
-  $this->productFixture->rollback();
-}
-```
+### [CMS](./src/Cms/README.md)
 
-The SKU is randomly generated and can be accessed through `ProductFixture`, just as the ID:
+Fixtures and Traits to build:
 
-```php
-$this->productFixture->getSku();
-$this->productFixture->getId();
-```
+* Pages
 
-### Cart/Checkout
+Todo:
 
-To create a quote, use the `CartBuilder` together with product fixtures:
+* Blocks
+* Widgets
 
-```php
-$cart = CartBuilder::forCurrentSession()
-  ->withSimpleProduct(
-    $productFixture1->getSku()
-  )
-  ->withSimpleProduct(
-    $productFixture2->getSku(), 10 // optional qty parameter
-  )
-  ->build()
-$quote = $cart->getQuote();
-```
+### [Core](./src/Core/README.md)
 
-Checkout is supported for logged in customers. To create an order, you can simulate the checkout as follows, given a customer fixture with default shipping and billing addresses and a product fixture:
+Fixtures to create config settings.
 
-```php
-$customerFixture = new CustomerFixture(CustomerBuilder::aCustomer()->withAddresses(
-  AddressBuilder::anAddress()->asDefaultBilling(),
-  AddressBuilder::anAddress()->asDefaultShipping()
-)->build());
-$customerFixture->login();
+### [Customer](./src/Customer/README.md)
 
-$checkout = CustomerCheckout::fromCart(
-  CartBuilder::forCurrentSession()
-    ->withProductRequest(ProductBuilder::aVirtualProduct()->build()->getSku())
-    ->build()
-);
+Fixtures and Traits to build:
 
-$order = $checkout->placeOrder();
-```
+* Customer Addresses
+* Customers
+* Customer Groups
 
-It will try to select the default addresses and the first available shipping and payment methods.
+### [Sales](./src/Sales/README.md)
 
-You can also select them explicitly:
+Fixtures to build:
 
-```php
-$order = $checkout
-  ->withShippingMethodCode('freeshipping_freeshipping')
-  ->withPaymentMethodCode('checkmo')
-  ->withCustomerBillingAddressId($this->customerFixture->getOtherAddressId())
-  ->withCustomerShippingAddressId($this->customerFixture->getOtherAddressId())
-  ->placeOrder();
-```
+* Credit memos
+* Invoices
+* Orders
+* Shipments
 
-### Order
+Todo:
 
-The `OrderBuilder` is a shortcut for checkout simulation.
+* Create traits
 
-```php
-$order = OrderBuilder::anOrder()->build(); 
-```
+### [Store](./src/Store/README.md)
 
-Logged-in customer, products, and cart item quantities will be
-generated internally unless more control is desired:
+Fixtures and Traits to build:
 
-```php
-$order = OrderBuilder::anOrder()
-    ->withProducts(
-        // prepare catalog product fixtures
-        ProductBuilder::aSimpleProduct()->withSku('foo'),
-        ProductBuilder::aSimpleProduct()->withSku('bar')
-    )->withCart(
-        // define cart item quantities
-        CartBuilder::forCurrentSession()->withSimpleProduct('foo', 2)->withSimpleProduct('bar', 3)
-    )->build();
-```
+* Stores
+* Store Groups
+* Websites
 
-### Shipment
+### [Tax](./src/Tax/README.md)
 
-Orders can be fully or partially shipped, optionally with tracks.
+Fixtures and Traits to build
 
-```php
-$order = OrderBuilder::anOrder()->build();
-
-// ship everything
-$shipment = ShipmentBuilder::forOrder($order)->build();
-// ship only given order items, add tracks
-$shipment = ShipmentBuilder::forOrder($order)
-    ->withItem($fooItemId, $fooQtyToShip)
-    ->withItem($barItemId, $barQtyToShip)
-    ->withTrackingNumbers('123-FOO', '456-BAR')
-    ->build();
-```
-
-### Invoice
-
-Orders can be fully or partially invoiced.
-
-```php
-$order = OrderBuilder::anOrder()->build();
-
-// invoice everything
-$invoice = InvoiceBuilder::forOrder($order)->build();
-// invoice only given order items
-$invoice = InvoiceBuilder::forOrder($order)
-    ->withItem($fooItemId, $fooQtyToInvoice)
-    ->withItem($barItemId, $barQtyToInvoice)
-    ->build();
-```
-
-### Credit Memo
-
-Credit memos can be created for either all or some of the items ordered.
-An invoice to refund will be created internally.
-
-```php
-$order = OrderBuilder::anOrder()->build();
-
-// refund everything
-$creditmemo = CreditmemoBuilder::forOrder($order)->build();
-// refund only given order items
-$creditmemo = CreditmemoBuilder::forOrder($order)
-    ->withItem($fooItemId, $fooQtyToRefund)
-    ->withItem($barItemId, $barQtyToRefund)
-    ->build();
-```
+* Tax Classes
+* Tax Rates
+* Tax Rules
 
 ### Fixture pools
 
 To manage multiple fixtures, **fixture pools** have been introduced for all entities:
 
 Usage demonstrated with the `ProductFixturePool`:
+
 ```
 protected function setUp()
 {
@@ -300,36 +164,27 @@ public function testSomethingWithMultipleProducts()
 
 ```
 
-### Config Fixtures
-
-With the config fixture you can set a configuration value globally, i.e. it will ensure that it is not only set in the default scope but also in all store scopes:
-```
-ConfigFixture::setGlobal('general/store_information/name', 'Ye Olde Wizard Shop');
-```
-
-It uses `MutableScopeConfigInterface`, so the configuration is not persisted in the database. Use `@magentoAppIsolation enabled` in your test to make sure that changes are reverted in subsequent tests.
-
-You can also set configuration values explicitly for stores with `ConfigFixture::setForStore()` 
+---
 
 ## Credits
 
-- [Fabian Schmengler][link-author]
+- [Fabian Schmengler][link-author-fs]
+- [Richard Hardman][link-author-rm]
 - [All Contributors][link-contributors]
 
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.txt) for more information.
 
-[ico-version]: https://img.shields.io/packagist/v/tddwizard/magento2-fixtures.svg?style=flat-square
-[ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
-[ico-travis]: https://img.shields.io/travis/tddwizard/magento2-fixtures/master.svg?style=flat-square
-[ico-scrutinizer]: https://img.shields.io/scrutinizer/coverage/g/tddwizard/magento2-fixtures?style=flat-square
-[ico-code-quality]: https://img.shields.io/scrutinizer/g/tddwizard/magento2-fixtures.svg?style=flat-square
+[ico-version]: https://img.shields.io/packagist/v/hardman-commerce/magento2-fixtures.svg?style=flat-square
 
-[link-packagist]: https://packagist.org/packages/tddwizard/magento2-fixtures
-[link-travis]: https://travis-ci.org/tddwizard/magento2-fixtures
-[link-scrutinizer]: https://scrutinizer-ci.com/g/tddwizard/magento2-fixtures/code-structure
-[link-code-quality]: https://scrutinizer-ci.com/g/tddwizard/magento2-fixtures
-[link-author]: https://github.com/schmengler
+[ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
+
+[link-packagist]: https://packagist.org/packages/hardman-commerce/magento2-fixtures
+
+[link-author-fs]: https://github.com/schmengler
+
+[link-author-rm]: https://github.com/hardman-commerce/
+
 [link-contributors]: ../../contributors
 

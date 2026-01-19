@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace TddWizard\Fixtures\Theme;
@@ -8,18 +9,17 @@ use Magento\TestFramework\Helper\Bootstrap;
 use Magento\Theme\Model\Theme\Registration;
 
 /**
- * A fixture to test theme features, e.g. with with test themes in `@magentoComponentsDir`
+ * A fixture to test theme features, e.g. with test themes in `@magentoComponentsDir`
  */
 class ThemeFixture
 {
-
     /**
      * Register new themes from the `@magentoComponentsDir` fixture in the database
      */
     public static function registerTestThemes(): void
     {
         /** @var Registration $registration */
-        $registration = Bootstrap::getObjectManager()->get(Registration::class);
+        $registration = Bootstrap::getObjectManager()->get(type: Registration::class);
         $registration->register();
     }
 
@@ -31,7 +31,7 @@ class ThemeFixture
     public static function setCurrentTheme(string $themePath): void
     {
         /** @var DesignInterface $design */
-        $design = Bootstrap::getObjectManager()->get(DesignInterface::class);
-        $design->setDesignTheme($themePath);
+        $design = Bootstrap::getObjectManager()->get(type: DesignInterface::class);
+        $design->setDesignTheme(theme: $themePath);
     }
 }
