@@ -18,26 +18,41 @@ class CustomerFixture
      */
     private $customer;
 
+    /**
+     * @param CustomerInterface $customer
+     */
     public function __construct(CustomerInterface $customer)
     {
         $this->customer = $customer;
     }
 
+    /**
+     * @return CustomerInterface
+     */
     public function getCustomer(): CustomerInterface
     {
         return $this->customer;
     }
 
+    /**
+     * @return int
+     */
     public function getDefaultShippingAddressId(): int
     {
         return (int) $this->customer->getDefaultShipping();
     }
 
+    /**
+     * @return int
+     */
     public function getDefaultBillingAddressId(): int
     {
         return (int) $this->customer->getDefaultBilling();
     }
 
+    /**
+     * @return int
+     */
     public function getOtherAddressId(): int
     {
         return $this->getNonDefaultAddressIds()[0];
@@ -69,22 +84,36 @@ class CustomerFixture
         );
     }
 
+    /**
+     * @return int
+     */
     public function getId(): int
     {
         return (int) $this->customer->getId();
     }
 
+    /**
+     * @return string
+     */
     public function getConfirmation(): string
     {
         return (string)$this->customer->getConfirmation();
     }
 
+    /**
+     * @return string
+     */
     public function getEmail(): string
     {
         return $this->customer->getEmail();
     }
 
-    public function login(Session $session = null): void
+    /**
+     * @param Session|null $session
+     *
+     * @return void
+     */
+    public function login(?Session $session = null): void
     {
         if ($session === null) {
             $objectManager = Bootstrap::getObjectManager();
@@ -94,7 +123,12 @@ class CustomerFixture
         $session->setCustomerId($this->getId());
     }
 
-    public function logout(Session $session = null): void
+    /**
+     * @param Session|null $session
+     *
+     * @return void
+     */
+    public function logout(?Session $session = null): void
     {
         if ($session === null) {
             $objectManager = Bootstrap::getObjectManager();
@@ -104,6 +138,10 @@ class CustomerFixture
         $session->logout();
     }
 
+    /**
+     * @return void
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     public function rollback(): void
     {
         CustomerFixtureRollback::create()->execute($this);

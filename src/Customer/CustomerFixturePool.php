@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace TddWizard\Fixtures\Customer;
 
 use Magento\Customer\Api\Data\CustomerInterface;
+use Magento\Framework\Exception\LocalizedException;
 use function array_values as values;
 
 class CustomerFixturePool
@@ -14,7 +15,13 @@ class CustomerFixturePool
      */
     private $customerFixtures = [];
 
-    public function add(CustomerInterface $customer, string $key = null): void
+    /**
+     * @param CustomerInterface $customer
+     * @param string|null $key
+     *
+     * @return void
+     */
+    public function add(CustomerInterface $customer, ?string $key = null): void
     {
         if ($key === null) {
             $this->customerFixtures[] = new CustomerFixture($customer);
@@ -29,7 +36,7 @@ class CustomerFixturePool
      * @param string|null $key
      * @return CustomerFixture
      */
-    public function get(string $key = null): CustomerFixture
+    public function get(?string $key = null): CustomerFixture
     {
         if ($key === null) {
             $key = \array_key_last($this->customerFixtures);
@@ -40,6 +47,10 @@ class CustomerFixturePool
         return $this->customerFixtures[$key];
     }
 
+    /**
+     * @return void
+     * @throws LocalizedException
+     */
     public function rollback(): void
     {
         CustomerFixtureRollback::create()->execute(...values($this->customerFixtures));

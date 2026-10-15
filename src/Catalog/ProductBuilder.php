@@ -25,6 +25,7 @@ use Magento\Downloadable\Api\DomainManagerInterface;
 use Magento\Downloadable\Api\LinkRepositoryInterface as DownloadableLinkRepositoryInterface;
 use Magento\Downloadable\Model\Product\Type as DownloadableType;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Module\Dir as Directory;
 use Magento\Indexer\Model\IndexerFactory;
@@ -479,6 +480,13 @@ class ProductBuilder
         return $builder;
     }
 
+    /**
+     * @param string $fileName
+     * @param string|null $imageType
+     *
+     * @return $this
+     * @throws LocalizedException
+     */
     public function withImage(string $fileName, ?string $imageType = 'image'): ProductBuilder
     {
         $builder = clone $this;

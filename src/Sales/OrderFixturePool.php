@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace TddWizard\Fixtures\Sales;
 
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Sales\Model\Order;
 use function array_values as values;
 
@@ -14,7 +16,13 @@ class OrderFixturePool
      */
     private $orderFixtures = [];
 
-    public function add(Order $order, string $key = null): void
+    /**
+     * @param Order $order
+     * @param string|null $key
+     *
+     * @return void
+     */
+    public function add(Order $order, ?string $key = null): void
     {
         if ($key === null) {
             $this->orderFixtures[] = new OrderFixture($order);
@@ -29,7 +37,7 @@ class OrderFixturePool
      * @param string|null $key
      * @return OrderFixture
      */
-    public function get(string $key = null): OrderFixture
+    public function get(?string $key = null): OrderFixture
     {
         if ($key === null) {
             $key = \array_key_last($this->orderFixtures);
@@ -40,6 +48,11 @@ class OrderFixturePool
         return $this->orderFixtures[$key];
     }
 
+    /**
+     * @return void
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     */
     public function rollback(): void
     {
         OrderFixtureRollback::create()->execute(...values($this->orderFixtures));

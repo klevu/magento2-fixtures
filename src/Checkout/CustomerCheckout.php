@@ -59,16 +59,27 @@ class CustomerCheckout
      */
     private $paymentMethodCode;
 
+    /**
+     * @param AddressRepositoryInterface $addressRepository
+     * @param CartRepositoryInterface $quoteRepository
+     * @param QuoteManagement $quoteManagement
+     * @param PaymentConfig $paymentConfig
+     * @param Cart $cart
+     * @param int|null $shippingAddressId
+     * @param int|null $billingAddressId
+     * @param string|null $shippingMethodCode
+     * @param string|null $paymentMethodCode
+     */
     final public function __construct(
         AddressRepositoryInterface $addressRepository,
         CartRepositoryInterface $quoteRepository,
         QuoteManagement $quoteManagement,
         PaymentConfig $paymentConfig,
         Cart $cart,
-        int $shippingAddressId = null,
-        int $billingAddressId = null,
-        string $shippingMethodCode = null,
-        string $paymentMethodCode = null
+        ?int $shippingAddressId = null,
+        ?int $billingAddressId = null,
+        ?string $shippingMethodCode = null,
+        ?string $paymentMethodCode = null
     ) {
 
         $this->addressRepository = $addressRepository;
@@ -82,6 +93,11 @@ class CustomerCheckout
         $this->paymentMethodCode = $paymentMethodCode;
     }
 
+    /**
+     * @param Cart $cart
+     *
+     * @return CustomerCheckout
+     */
     public static function fromCart(Cart $cart): CustomerCheckout
     {
         $objectManager = Bootstrap::getObjectManager();
@@ -94,6 +110,11 @@ class CustomerCheckout
         );
     }
 
+    /**
+     * @param int $addressId
+     *
+     * @return $this
+     */
     public function withCustomerBillingAddressId(int $addressId): CustomerCheckout
     {
         $checkout = clone $this;
@@ -101,6 +122,11 @@ class CustomerCheckout
         return $checkout;
     }
 
+    /**
+     * @param int $addressId
+     *
+     * @return $this
+     */
     public function withCustomerShippingAddressId(int $addressId): CustomerCheckout
     {
         $checkout = clone $this;
@@ -108,6 +134,11 @@ class CustomerCheckout
         return $checkout;
     }
 
+    /**
+     * @param string $code
+     *
+     * @return $this
+     */
     public function withShippingMethodCode(string $code): CustomerCheckout
     {
         $checkout = clone $this;
@@ -115,6 +146,11 @@ class CustomerCheckout
         return $checkout;
     }
 
+    /**
+     * @param string $code
+     *
+     * @return $this
+     */
     public function withPaymentMethodCode(string $code): CustomerCheckout
     {
         $checkout = clone $this;
