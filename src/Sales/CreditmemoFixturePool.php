@@ -13,7 +13,13 @@ class CreditmemoFixturePool
      */
     private $creditmemoFixtures = [];
 
-    public function add(CreditmemoInterface $creditmemo, string $key = null): void
+    /**
+     * @param CreditmemoInterface $creditmemo
+     * @param string|null $key
+     *
+     * @return void
+     */
+    public function add(CreditmemoInterface $creditmemo, ?string $key = null): void
     {
         if ($key === null) {
             $this->creditmemoFixtures[] = new CreditmemoFixture($creditmemo);
@@ -28,7 +34,7 @@ class CreditmemoFixturePool
      * @param string|null $key
      * @return CreditmemoFixture
      */
-    public function get(string $key = null): CreditmemoFixture
+    public function get(?string $key = null): CreditmemoFixture
     {
         if ($key === null) {
             $key = \array_key_last($this->creditmemoFixtures);

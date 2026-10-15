@@ -14,7 +14,13 @@ class CategoryFixturePool
      */
     private $categoryFixtures = [];
 
-    public function add(CategoryInterface $category, string $key = null): void
+    /**
+     * @param CategoryInterface $category
+     * @param string|null $key
+     *
+     * @return void
+     */
+    public function add(CategoryInterface $category, ?string $key = null): void
     {
         if ($key === null) {
             $this->categoryFixtures[] = new CategoryFixture($category);
@@ -40,6 +46,10 @@ class CategoryFixturePool
         return $this->categoryFixtures[$key];
     }
 
+    /**
+     * @return void
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     public function rollback(): void
     {
         CategoryFixtureRollback::create()->execute(...values($this->categoryFixtures));
